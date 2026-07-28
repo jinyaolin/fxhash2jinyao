@@ -2,7 +2,12 @@ import { Link } from 'react-router-dom'
 import { useProject } from '@whitehash/react'
 import { Spinner, editionsLabel } from '@whitehash/ui'
 import { ProjectCover } from '../components/ProjectCover'
-import { ARTIST, PROJECTS, type CuratedProject } from '../data/projects'
+import {
+  ARTIST,
+  PROJECTS,
+  SAMPLE_TOKEN,
+  type CuratedProject,
+} from '../data/projects'
 
 function ProjectCard({ project }: { project: CuratedProject }) {
   const { project: onChain, loading, error } = useProject({
@@ -54,11 +59,9 @@ export function HomePage() {
           from Tezos + IPFS — no fxhash platform backend.
         </p>
         <p className="meta">
-          <span>{ARTIST.handle}</span>
+          <span>{PROJECTS.length} projects</span>
           <span aria-hidden>·</span>
-          <a href={ARTIST.site} target="_blank" rel="noreferrer">
-            aluanwang.com
-          </a>
+          <span className="mono">{ARTIST.tezos}</span>
         </p>
       </header>
 
@@ -69,9 +72,9 @@ export function HomePage() {
       </section>
 
       <section className="proof">
-        <h2>Live check · Chaos Memory #106</h2>
+        <h2>Live check · {SAMPLE_TOKEN.label}</h2>
         <p>Open a known token to verify preview + Run live.</p>
-        <Link className="button" to="/token/chaos-memory-106">
+        <Link className="button" to="/token/sample">
           Open sample token →
         </Link>
       </section>

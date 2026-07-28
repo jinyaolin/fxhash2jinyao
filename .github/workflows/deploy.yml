@@ -32,7 +32,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_BASE_PATH: /fxhash2aluan/
+          VITE_BASE_PATH: /fxhash2jinyao/
 
       # SPA deep links on GitHub Pages
       - name: SPA 404 fallback

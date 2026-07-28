@@ -7,15 +7,8 @@ import {
 } from 'react-router-dom'
 import { useToken } from '@whitehash/react'
 import { Artwork, Spinner } from '@whitehash/ui'
-import { GENTK_V2 } from '../data/projects'
+import { SAMPLE_TOKEN } from '../data/projects'
 import { objktTokenUrl } from '../lib/objkt'
-
-const SAMPLE = {
-  chain: 'tezos:mainnet' as const,
-  contract: GENTK_V2,
-  tokenId: '600560',
-  label: 'Chaos Memory #106',
-}
 
 export function TokenPage() {
   const { contract, tokenId } = useParams()
@@ -24,9 +17,13 @@ export function TokenPage() {
   const navigate = useNavigate()
   const from = search.get('from')
 
-  const isSample = location.pathname === '/token/chaos-memory-106'
+  const isSample = location.pathname === '/token/sample'
   const input = isSample
-    ? { chain: SAMPLE.chain, contract: SAMPLE.contract, tokenId: SAMPLE.tokenId }
+    ? {
+        chain: SAMPLE_TOKEN.chain,
+        contract: SAMPLE_TOKEN.contract,
+        tokenId: SAMPLE_TOKEN.tokenId,
+      }
     : contract && tokenId
       ? {
           chain: 'tezos:mainnet' as const,
@@ -65,7 +62,8 @@ export function TokenPage() {
   }
 
   const backTo = from ? `/works/${from}` : '/'
-  const title = token.name ?? (isSample ? SAMPLE.label : `#${token.tokenId}`)
+  const title =
+    token.name ?? (isSample ? SAMPLE_TOKEN.label : `#${token.tokenId}`)
   const objktUrl = objktTokenUrl(token.contract, token.tokenId)
 
   return (

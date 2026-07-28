@@ -17,7 +17,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/works/:slug" element={<WorkPage />} />
-            <Route path="/token/chaos-memory-106" element={<TokenPage />} />
+            <Route path="/token/sample" element={<TokenPage />} />
             <Route
               path="/token/:contract/:tokenId"
               element={<TokenPage />}

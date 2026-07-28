@@ -433,6 +433,11 @@ a {
   font-size: 0.8rem !important;
 }
 
+/* Tezos address in the hero meta line — never push the page wide. */
+.meta .mono {
+  word-break: break-all;
+}
+
 .error {
   color: var(--danger);
 }

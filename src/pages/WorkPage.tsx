@@ -13,8 +13,13 @@ import {
 } from '@whitehash/ui'
 import type { ListOrder, WhitehashToken } from '@whitehash/chain-reader'
 import { ProjectCover } from '../components/ProjectCover'
-import { getProject, type CuratedProject } from '../data/projects'
+import {
+  getProject,
+  SAMPLE_TOKEN,
+  type CuratedProject,
+} from '../data/projects'
 import { shouldShowToken } from '../lib/tokens'
+import { fetchIssuerTokenKeys, type TokenKey } from '../lib/issuerTokens'
 
 function ArtworkCard({
   token,
@@ -61,27 +66,52 @@ function WorkPageContent({
     { order },
   )
 
+  // Which iterations actually came from this issuer. Null while in flight —
+  // until it resolves we must not render, or another artist's same-named
+  // tokens flash in first.
+  const [issuerTokenKeys, setIssuerTokenKeys] = useState<Set<TokenKey> | null>(
+    null,
+  )
+  const [issuerError, setIssuerError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    setIssuerTokenKeys(null)
+    setIssuerError(null)
+    fetchIssuerTokenKeys(projectRef.projectId, controller.signal)
+      .then(setIssuerTokenKeys)
+      .catch((err: unknown) => {
+        if (controller.signal.aborted) return
+        setIssuerError(err instanceof Error ? err.message : String(err))
+      })
+    return () => controller.abort()
+  }, [projectRef.projectId])
+
   const visibleTokens = useMemo(
     () =>
-      tokens.filter((token) =>
-        shouldShowToken(token, {
-          projectName: project?.name,
-          hideIterationsThrough: projectRef.hideIterationsThrough,
-        }),
-      ),
-    [tokens, project?.name, projectRef.hideIterationsThrough],
+      issuerTokenKeys
+        ? tokens.filter((token) =>
+            shouldShowToken(token, {
+              projectName: project?.name,
+              hideIterationsThrough: projectRef.hideIterationsThrough,
+              issuerTokenKeys,
+            }),
+          )
+        : [],
+    [tokens, project?.name, projectRef.hideIterationsThrough, issuerTokenKeys],
   )
 
-  // Whitehash name search is case-insensitive; after exact-name filter we may
-  // need extra pages (e.g. Collage vs older COLLAGE on genesis).
+  // Whitehash pages by name match, so a page can be mostly another issuer's
+  // tokens (aura/Aura, forsaken/forsaken). Pull more until the grid is filled.
   useEffect(() => {
-    if (!project?.name) return
+    if (!project?.name || !issuerTokenKeys) return
     if (loading || !hasMore) return
     if (tokens.length === 0) return
     if (visibleTokens.length >= 12) return
     void loadMore()
   }, [
     project?.name,
+    issuerTokenKeys,
     loading,
     hasMore,
     tokens.length,
@@ -123,9 +153,9 @@ function WorkPageContent({
             {projectRef.projectId}
             {label ? ` · ${label}` : ''}
           </p>
-          {projectRef.sampleToken && (
-            <Link className="button" to="/token/chaos-memory-106">
-              Sample · #{projectRef.sampleToken.iteration}
+          {projectRef.slug === SAMPLE_TOKEN.slug && (
+            <Link className="button" to="/token/sample">
+              Sample · {SAMPLE_TOKEN.label}
             </Link>
           )}
         </div>
@@ -140,8 +170,11 @@ function WorkPageContent({
         </div>
 
         {error ? <p className="error">{error}</p> : null}
+        {issuerError ? (
+          <p className="error">Could not read issuer tokens: {issuerError}</p>
+        ) : null}
 
-        {loading && visibleTokens.length === 0 ? (
+        {(loading || !issuerTokenKeys) && visibleTokens.length === 0 ? (
           <div className="page center">
             <Spinner />
           </div>
@@ -161,12 +194,15 @@ function WorkPageContent({
           {loading && visibleTokens.length > 0 ? (
             <p className="meta">Loading more…</p>
           ) : null}
-          {!loading && hasMore ? (
+          {!loading && issuerTokenKeys && hasMore ? (
             <Button variant="link" onClick={() => void loadMore()}>
               Load More
             </Button>
           ) : null}
-          {!loading && visibleTokens.length === 0 && !error ? (
+          {!loading &&
+          issuerTokenKeys &&
+          visibleTokens.length === 0 &&
+          !error ? (
             <p className="meta">No minted iterations found.</p>
           ) : null}
         </div>
