@@ -18,6 +18,7 @@ import {
   SAMPLE_TOKEN,
   type CuratedProject,
 } from '../data/projects'
+import { PROJECT_META } from '../data/projectMeta.generated'
 import { shouldShowToken } from '../lib/tokens'
 import { fetchIssuerTokenKeys, type TokenKey } from '../lib/issuerTokens'
 
@@ -66,6 +67,12 @@ function WorkPageContent({
     { order },
   )
 
+  // Same floor as the home page: when the IPFS metadata fetch is throttled the
+  // reader returns a project with null name/cover, and the header would show a
+  // bare `v2:<id>`. The generated values are the identical on-chain metadata.
+  const baked = PROJECT_META[projectRef.projectId]
+  const projectName = project?.name ?? baked?.name ?? null
+
   // Which iterations actually came from this issuer. Null while in flight —
   // until it resolves we must not render, or another artist's same-named
   // tokens flash in first.
@@ -92,25 +99,25 @@ function WorkPageContent({
       issuerTokenKeys
         ? tokens.filter((token) =>
             shouldShowToken(token, {
-              projectName: project?.name,
+              projectName,
               hideIterationsThrough: projectRef.hideIterationsThrough,
               issuerTokenKeys,
             }),
           )
         : [],
-    [tokens, project?.name, projectRef.hideIterationsThrough, issuerTokenKeys],
+    [tokens, projectName, projectRef.hideIterationsThrough, issuerTokenKeys],
   )
 
   // Whitehash pages by name match, so a page can be mostly another issuer's
   // tokens (aura/Aura, forsaken/forsaken). Pull more until the grid is filled.
   useEffect(() => {
-    if (!project?.name || !issuerTokenKeys) return
+    if (!projectName || !issuerTokenKeys) return
     if (loading || !hasMore) return
     if (tokens.length === 0) return
     if (visibleTokens.length >= 12) return
     void loadMore()
   }, [
-    project?.name,
+    projectName,
     issuerTokenKeys,
     loading,
     hasMore,
@@ -125,11 +132,17 @@ function WorkPageContent({
     )
   }
 
-  const title = project?.name ?? projectRef.projectId
+  const title = projectName ?? projectRef.projectId
+  const description = project?.description ?? baked?.description ?? null
   const label = project
     ? editionsLabel(project.minted, project.editions)
     : ''
-  const coverUri = project?.displayUri ?? project?.thumbnailUri ?? null
+  const coverUri =
+    project?.displayUri ??
+    project?.thumbnailUri ??
+    baked?.displayUri ??
+    baked?.thumbnailUri ??
+    null
 
   return (
     <main className="page wide">
@@ -148,7 +161,7 @@ function WorkPageContent({
         />
         <div className="work-head-copy">
           <h1>{title}</h1>
-          {project?.description ? <p>{project.description}</p> : null}
+          {description ? <p>{description}</p> : null}
           <p className="meta">
             {projectRef.projectId}
             {label ? ` · ${label}` : ''}

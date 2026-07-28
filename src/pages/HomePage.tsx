@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
-import { useProject } from '@whitehash/react'
 import { Spinner, editionsLabel } from '@whitehash/ui'
 import { ProjectCover } from '../components/ProjectCover'
+import { useProjectHeader } from '../lib/projectHeader'
 import {
   ARTIST,
   PROJECTS,
@@ -10,15 +10,13 @@ import {
 } from '../data/projects'
 
 function ProjectCard({ project }: { project: CuratedProject }) {
-  const { project: onChain, loading, error } = useProject({
-    chain: project.chain,
-    id: project.projectId,
-  })
+  const { name, description, coverUri, minted, editions, loading, error } =
+    useProjectHeader(project.chain, project.projectId)
 
-  const title = onChain?.name ?? project.projectId
-  const description = onChain?.description
-  const editions = editionsLabel(onChain?.minted ?? null, onChain?.editions ?? null)
-  const coverUri = onChain?.displayUri ?? onChain?.thumbnailUri ?? null
+  // `name` falls back to the generated metadata, so it is set on the first
+  // paint — no '…' placeholder and no bare `v2:<id>` when IPFS is throttled.
+  const title = name ?? project.projectId
+  const editionsText = editionsLabel(minted, editions)
 
   return (
     <Link className="card" to={`/works/${project.slug}`}>
@@ -30,19 +28,19 @@ function ProjectCard({ project }: { project: CuratedProject }) {
       />
       <div className="card-body">
         <div className="card-top">
-          <h2>{loading ? '…' : title}</h2>
+          <h2>{title}</h2>
           <span className="year">{project.projectId}</span>
         </div>
-        {error ? (
-          <p className="error">{error}</p>
-        ) : description ? (
+        {description ? (
           <p className="card-desc">{description}</p>
+        ) : error ? (
+          <p className="error">{error}</p>
         ) : loading ? (
           <p>
             <Spinner />
           </p>
         ) : null}
-        {editions ? <p className="card-meta">{editions}</p> : null}
+        {editionsText ? <p className="card-meta">{editionsText}</p> : null}
       </div>
     </Link>
   )

@@ -9,9 +9,26 @@ import './App.css'
 /** Must match Vite `base` (no trailing slash for react-router). */
 const BASENAME = import.meta.env.BASE_URL.replace(/\/$/, '') || ''
 
+/**
+ * Whitehash defaults to ipfs.io + dweb.link, tried in order with one attempt
+ * each and no backoff. Both are Protocol Labs and rate-limit a burst, which on
+ * the 17-card home page shows up as missing titles and covers. Two more CORS-
+ * enabled public gateways to fall through to.
+ */
+const WHITEHASH_CONFIG = {
+  resolver: {
+    ipfsGateways: [
+      'https://ipfs.io',
+      'https://dweb.link',
+      'https://gateway.pinata.cloud',
+      'https://4everland.io',
+    ],
+  },
+}
+
 export default function App() {
   return (
-    <WhitehashProvider>
+    <WhitehashProvider config={WHITEHASH_CONFIG}>
       <BrowserRouter basename={BASENAME}>
         <div className="shell">
           <Routes>

@@ -35,6 +35,24 @@ across every gentk FA2. That is not unique, and two of these projects are hit by
 gentk `token_data` big map filtered by `issuer_id`, and `shouldShowToken()`
 uses it as the deciding filter. The grid waits for that set before rendering.
 
+### Why project metadata is also baked in
+
+Titles and covers come from IPFS, one fetch per card. Whitehash ships two
+gateways (`ipfs.io`, `dweb.link` — both Protocol Labs), tries them once each
+with no backoff, and `fetchProjectMetadata()` turns any failure into `null`.
+A 17-card home page bursts past their rate limit, so cards silently degrade to
+a bare `v2:<id>` with no cover.
+
+Three changes:
+
+- `src/data/projectMeta.generated.ts` — on-chain name/description/covers,
+  committed. Used as a floor; live chain data still wins. Regenerate with
+  `npm run meta` after minting a new project.
+- `App.tsx` adds two more CORS-enabled gateways to fall through to.
+- The home page uses `useProjectHeader()` (`src/lib/projectHeader.ts`) instead
+  of `useProject()`. The latter also runs `listProjectTokens` — three TzKT
+  queries per project, 51 wasted requests for cards that show no iterations.
+
 ## Embed
 
 ```html
@@ -125,12 +143,14 @@ Titles, descriptions, and covers come from chain metadata via Whitehash.
 `KT1BJC12dG17CVvPKJ1VYaNnaT5mzfnUTwXv`, which holds the migrated genesis-era
 projects too. Minted counts are `token_data` entries per `issuer_id`.
 
-To re-derive the list after minting something new:
+After minting something new:
 
 ```bash
-curl -s "https://api.tzkt.io/v1/bigmaps/149776/keys\
-?value.author=tz1XuoTxu2m7Kdp5iBhLv35KxFcjkoeY5vYe&limit=200&select=key"
+npm run meta          # refresh src/data/projectMeta.generated.ts from chain
 ```
+
+then add the slug ↔ `v2:<issuer_id>` entry to `PROJECTS`. The script prints
+every project the wallet has issued, so it doubles as the id lookup.
 
 ### Objkt links
 
