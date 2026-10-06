@@ -36,14 +36,21 @@ const BASENAME = import.meta.env.BASE_URL.replace(/\/$/, '') || ''
  * 4everland too (it never served these CIDs). ipfs.io stays only as a safety
  * net in case Pinata changes.
  *
- * One working public gateway is not a healthy place to be. The durable fix is
- * our own gateway off the local backup in /root/fxhash_ipfs_backup (verified
- * byte-identical to the real CIDs), which removes the third-party dependency
- * for these 17 projects entirely.
+ * One working public gateway is not a healthy place to be, so the same day we
+ * stood up our own: Caddy on the box that already serves jinyaolin.info answers
+ * /ipfs/<cid> straight from the local backup (/root/fxhash_ipfs_backup, a
+ * symlink tree built by build-gateway-index.py there). Measured against the
+ * same CID: ours 22ms, Pinata 6.4s, and the bytes are identical. All 34 CIDs
+ * this gallery needs are covered, so the public gateways below are now only a
+ * fallback for CIDs the backup does not have yet.
  */
 const WHITEHASH_CONFIG = {
   resolver: {
     ipfsGateways: [
+      // 自家 gateway:直接餵本機備份(/root/fxhash_ipfs_backup),22ms、不限流、
+      // 不依賴任何第三方。涵蓋這 17 件作品需要的全部 34 個 CID。
+      'https://jinyaolin.info',
+      // 備份裡沒有的 CID(例如以後新增作品還沒備份)才會走到這裡。
       'https://gateway.pinata.cloud',
       'https://ipfs.io',
     ],
