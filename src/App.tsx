@@ -22,17 +22,29 @@ const BASENAME = import.meta.env.BASE_URL.replace(/\/$/, '') || ''
  * covers gave up before getting there.
  *
  * So the order below leads with gateways that were actually verified to serve
- * these CIDs (all 34 of them, with `Access-Control-Allow-Origin: *`):
- * fxhash's own gateway first — it is the one place guaranteed to keep fxhash
- * content pinned — then Pinata. ipfs.io stays last purely as a safety net in
- * case the others change.
+ * these CIDs (all 34 of them, with `Access-Control-Allow-Origin: *`).
+ *
+ * 2026-10-06 re-measured, and the picture got worse:
+ *   gateway.fxhash.xyz   403 "This gateway is currently unavailable."  ← shut down
+ *   gateway.pinata.cloud 200 (the only one that works, ~6.4s)
+ *   4everland.io         301 → subdomain form answers 400
+ *   ipfs.io / dweb.link  429 (unchanged)
+ *   w3s.link             301 → subdomain form also 301
+ * fxhash's gateway was FIRST in the list, so every asset paid a failed
+ * round-trip to a dead host before reaching Pinata — that 403 page is exactly
+ * the "gateway unavailable" the previews were showing. Dropped it, and dropped
+ * 4everland too (it never served these CIDs). ipfs.io stays only as a safety
+ * net in case Pinata changes.
+ *
+ * One working public gateway is not a healthy place to be. The durable fix is
+ * our own gateway off the local backup in /root/fxhash_ipfs_backup (verified
+ * byte-identical to the real CIDs), which removes the third-party dependency
+ * for these 17 projects entirely.
  */
 const WHITEHASH_CONFIG = {
   resolver: {
     ipfsGateways: [
-      'https://gateway.fxhash.xyz',
       'https://gateway.pinata.cloud',
-      'https://4everland.io',
       'https://ipfs.io',
     ],
   },

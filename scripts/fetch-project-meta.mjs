@@ -20,9 +20,10 @@ const TZKT = 'https://api.tzkt.io'
 /** fxhash v2 issuer contract — holds the migrated genesis-era projects too. */
 const ISSUER_LEDGER = `${TZKT}/v1/contracts/KT1BJC12dG17CVvPKJ1VYaNnaT5mzfnUTwXv/bigmaps/ledger/keys`
 const GATEWAYS = [
+  // 2026-10-06 實測:只有 Pinata 會回 200,ipfs.io/dweb.link 一律 429。先打會成功的。
+  'https://gateway.pinata.cloud',
   'https://ipfs.io',
   'https://dweb.link',
-  'https://gateway.pinata.cloud',
   'https://4everland.io',
 ]
 const OUT = new URL('../src/data/projectMeta.generated.ts', import.meta.url)
