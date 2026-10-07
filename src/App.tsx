@@ -49,7 +49,14 @@ const WHITEHASH_CONFIG = {
     ipfsGateways: [
       // 自家 gateway:直接餵本機備份(/root/fxhash_ipfs_backup),22ms、不限流、
       // 不依賴任何第三方。涵蓋這 17 件作品需要的全部 34 個 CID。
-      'https://jinyaolin.info',
+      //
+      // base 指 /live 而不是根路徑:whitehash 的 joinGateway 會接成
+      // <base>/ipfs/<CID>,所以這裡會打到 /live/ipfs/*。那條路線的內容與 /ipfs/*
+      // 相同,只有 aura / evangel / reveal 的 index.html 多一行 gpu.js 相容修補 ——
+      // 它們打包的 gpu.js 2.11.3 把命名空間掛成 window.GPU,sketch 卻 new GPU(),
+      // 從任何 gateway 載入都會 "GPU is not a constructor"(已與 IPFS 正本逐位元組
+      // 比對,確認不是 gateway 改壞的)。/ipfs/* 保持位元組精確、CID 可驗證。
+      'https://jinyaolin.info/live',
       // 備份裡沒有的 CID(例如以後新增作品還沒備份)才會走到這裡。
       'https://gateway.pinata.cloud',
       'https://ipfs.io',
